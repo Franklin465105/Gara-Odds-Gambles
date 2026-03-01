@@ -17,7 +17,7 @@ public class GaraOddsApp { // main class
         Scanner scanner = new Scanner(System.in);
         // reads input from the keyboards
 
-        System.out.println("Welcome to GaraOdds");
+        System.out.println("Welcome to Gara Odds");
         System.out.print("Username: ");
         // asks user to input a name
         String username = scanner.nextLine();
