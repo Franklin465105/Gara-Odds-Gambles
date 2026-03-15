@@ -1,4 +1,3 @@
-
 package ie.atu.GaraOdds;
 
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +18,13 @@ public class BalanceController {
     @GetMapping("/balance")
     public String showBalance(@RequestParam String username) {
 
-        Double balance = balances.get(username);
+        // checks saved users
+        if (!UserStorage.userExists(username)) {
+            return "<h3>User not found</h3><a href='/'>Back to Login</a>";
+        }
+
+        // gets saved balance from file
+        Double balance = UserStorage.getBalance(username);
 
         if (balance != null) {
             return "<h2>Hello, " + username + ".</h2>" +
@@ -41,7 +46,6 @@ public class BalanceController {
                     "<button type='submit'>Withdraw</button>" +
                     "</form><br>" +
 
-
                     "<a href='/'>Logout</a>";
         }
 
@@ -60,11 +64,11 @@ public class BalanceController {
                     "<a href='/balance?username=" + username + "'>Back to Balance</a>";
         }
 
-        Double currentBalance = balances.get(username);
+        // updates saved balance
+        boolean success = UserStorage.deposit(username, amount);
 
-        if (currentBalance != null) {
-            currentBalance += amount; // adds money to account
-            balances.put(username, currentBalance);
+        if (success) {
+            double currentBalance = UserStorage.getBalance(username);
 
             return "<h2>Deposit Successful</h2>" +
                     "<p>Your updated Balance: €" + currentBalance + "</p>" +
@@ -79,9 +83,10 @@ public class BalanceController {
     @PostMapping("/withdraw")
     public String withdraw(@RequestParam String username, @RequestParam double amount) {
 
-        Double currentBalance = balances.get(username);
+        // gets saved balance
+        Double currentBalance = UserStorage.getBalance(username);
 
-        if (currentBalance == null) {
+        if (!UserStorage.userExists(username)) {
             return "<h3>User not found</h3><a href='/'>Back to Login</a>";
         }
 
@@ -97,14 +102,18 @@ public class BalanceController {
                     "<a href='/balance?username=" + username + "'>Back to Balance</a>";
         }
 
-        // take withdraw amount from account
-        currentBalance -= amount;
-        balances.put(username, currentBalance);
+        // updates saved balance
+        boolean success = UserStorage.withdraw(username, amount);
 
-        return "<h2>Withdrawal Successful</h2>" +
-                "<p>New Balance: €" + currentBalance + "</p>" +
-                "<a href='/balance?username=" + username + "'>Back to Balance</a>";
+        if (success) {
+            double updatedBalance = UserStorage.getBalance(username);
+
+            return "<h2>Withdrawal Successful</h2>" +
+                    "<p>New Balance: €" + updatedBalance + "</p>" +
+                    "<a href='/balance?username=" + username + "'>Back to Balance</a>";
+        }
+
+        return "<h3>Withdrawal failed</h3><a href='/balance?username=" + username + "'>Back</a>";
     }
 
 }
-
