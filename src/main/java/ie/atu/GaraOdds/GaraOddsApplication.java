@@ -12,3 +12,4 @@ public class GaraOddsApplication {
     }
 }
 
+// http://localhost:8080/
