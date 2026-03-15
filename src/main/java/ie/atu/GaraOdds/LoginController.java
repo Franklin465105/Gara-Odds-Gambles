@@ -34,9 +34,10 @@ public class LoginController {
         if (users.containsKey(username) &&
                 users.get(username).equals(password)) {
 
-            return "<h1>You are Logged in</h1>";
+            return "<h1>You are Logged in</h1>" +
+            "<p>Welcome, " + username + ".</p>" +
+                    "<a href='/balance?username=" + username + "'>View Balance</a>";
         }
         return "<h3>Invalid credentials</h3><a href='/'>Try again</a>";
     }
 }
-
