@@ -1,17 +1,43 @@
 package ie.atu.GaraOdds.Controller;
 
+import ie.atu.GaraOdds.Client.GaraOddsBettingClient;
 import ie.atu.GaraOdds.Service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/categories")
 public class CategoriesController {
 
     private final UserService userService;
+    private final GaraOddsBettingClient bettingClient;
 
-    public CategoriesController(UserService userService) {
+    private static final Map<String, Double> SPORTS_ODDS = Map.of(
+            "Football", 1.8,
+            "Basketball", 2.1,
+            "Tennis", 1.5,
+            "Golf", 3.5,
+            "MMA", 2.8
+    );
+
+    private static final Map<String, Double> ESPORTS_ODDS = Map.of(
+            "COD", 1.9,
+            "League of Legends", 2.2,
+            "Valorant", 1.7,
+            "Fortnite", 3.0
+    );
+
+    private static final Map<String, Double> CHANCER_ODDS = Map.of(
+            "Numbers", 5.0,
+            "Colour", 2.0,
+            "Dicer", 6.0
+    );
+
+    public CategoriesController(UserService userService, GaraOddsBettingClient bettingClient) {
         this.userService = userService;
+        this.bettingClient = bettingClient;
     }
 
     // shows available categories
@@ -28,7 +54,6 @@ public class CategoriesController {
                         "Sports\n" +
                         "Esports\n" +
                         "Chancer"
-
         );
     }
 
@@ -40,9 +65,12 @@ public class CategoriesController {
             return ResponseEntity.badRequest().body("User not found");
         }
 
-        return ResponseEntity.ok(
-                "Sports available: Football, Basketball, Tennis, Golf, MMA"
+        StringBuilder sb = new StringBuilder("Sports available:\n");
+        SPORTS_ODDS.forEach((sport, odds) ->
+                sb.append("  ").append(sport).append(" — Odds: x").append(odds).append("\n")
         );
+        sb.append("\nTo bet: POST /categories/sports/bet?username=&sport=&amount=");
+        return ResponseEntity.ok(sb.toString());
     }
 
     // shows esports options only
@@ -53,9 +81,12 @@ public class CategoriesController {
             return ResponseEntity.badRequest().body("User not found");
         }
 
-        return ResponseEntity.ok(
-                "Esports available: COD, League of Legends, Valorant, Fortnite"
+        StringBuilder sb = new StringBuilder("Esports available:\n");
+        ESPORTS_ODDS.forEach((game, odds) ->
+                sb.append("  ").append(game).append(" — Odds: x").append(odds).append("\n")
         );
+        sb.append("\nTo bet: POST /categories/esports/bet?username=&game=&amount=");
+        return ResponseEntity.ok(sb.toString());
     }
 
     @GetMapping("/chancer")
@@ -65,8 +96,80 @@ public class CategoriesController {
             return ResponseEntity.badRequest().body("User not found");
         }
 
-        return ResponseEntity.ok(
-                "Chancers available: numbers,colour,dicer"
+        StringBuilder sb = new StringBuilder("Chancer games available:\n");
+        CHANCER_ODDS.forEach((game, odds) ->
+                sb.append("  ").append(game).append(" — Odds: x").append(odds).append("\n")
         );
+        sb.append("\nTo bet: POST /categories/chancer/bet?username=&game=&amount=");
+        return ResponseEntity.ok(sb.toString());
+    }
+
+    // places a sports bet
+    @PostMapping("/sports/bet")
+    public ResponseEntity<?> placeSportsBet(
+            @RequestParam String username,
+            @RequestParam String sport,
+            @RequestParam double amount) {
+
+        if (!userService.userExists(username)) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+
+        Double odds = SPORTS_ODDS.get(sport);
+        if (odds == null) {
+            return ResponseEntity.badRequest().body("Sport not found. Available: " + SPORTS_ODDS.keySet());
+        }
+
+        String result = bettingClient.placeBet(username, amount, odds, "Sports");
+        return ResponseEntity.ok(result);
+    }
+
+    // places an esports bet
+    @PostMapping("/esports/bet")
+    public ResponseEntity<?> placeEsportsBet(
+            @RequestParam String username,
+            @RequestParam String game,
+            @RequestParam double amount) {
+
+        if (!userService.userExists(username)) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+
+        Double odds = ESPORTS_ODDS.get(game);
+        if (odds == null) {
+            return ResponseEntity.badRequest().body("Game not found. Available: " + ESPORTS_ODDS.keySet());
+        }
+
+        String result = bettingClient.placeBet(username, amount, odds, "Esports");
+        return ResponseEntity.ok(result);
+    }
+
+    // places a chancer bet
+    @PostMapping("/chancer/bet")
+    public ResponseEntity<?> placeChancerBet(
+            @RequestParam String username,
+            @RequestParam String game,
+            @RequestParam double amount) {
+
+        if (!userService.userExists(username)) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+
+        Double odds = CHANCER_ODDS.get(game);
+        if (odds == null) {
+            return ResponseEntity.badRequest().body("Game not found. Available: " + CHANCER_ODDS.keySet());
+        }
+
+        String result = bettingClient.placeBet(username, amount, odds, "Chancer");
+        return ResponseEntity.ok(result);
+    }
+
+    // shows all bets for a user
+    @GetMapping("/my-bets")
+    public ResponseEntity<?> myBets(@RequestParam String username) {
+        if (!userService.userExists(username)) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+        return ResponseEntity.ok(bettingClient.getBets(username));
     }
 }
