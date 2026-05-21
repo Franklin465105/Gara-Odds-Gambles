@@ -120,8 +120,11 @@ public class CategoriesController {
             return ResponseEntity.badRequest().body("Sport not found. Available: " + SPORTS_ODDS.keySet());
         }
 
-        String result = bettingClient.placeBet(username, amount, odds, "Sports");
-        return ResponseEntity.ok(result);
+        try {
+            return bettingClient.placeBet(username, amount, odds, "Sports");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // places an esports bet
@@ -140,8 +143,11 @@ public class CategoriesController {
             return ResponseEntity.badRequest().body("Game not found. Available: " + ESPORTS_ODDS.keySet());
         }
 
-        String result = bettingClient.placeBet(username, amount, odds, "Esports");
-        return ResponseEntity.ok(result);
+        try {
+            return bettingClient.placeBet(username, amount, odds, "Esports");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // places a chancer bet
@@ -160,8 +166,11 @@ public class CategoriesController {
             return ResponseEntity.badRequest().body("Game not found. Available: " + CHANCER_ODDS.keySet());
         }
 
-        String result = bettingClient.placeBet(username, amount, odds, "Chancer");
-        return ResponseEntity.ok(result);
+        try {
+            return bettingClient.placeBet(username, amount, odds, "Chancer");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // shows all bets for a user

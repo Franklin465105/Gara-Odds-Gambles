@@ -1,6 +1,7 @@
 package ie.atu.GaraOdds.Client;
 
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,7 +11,7 @@ public interface GaraOddsBettingClient {
 
     // places a bet in the betting microservice
     @PostMapping("/bets/place")
-    String placeBet(
+    ResponseEntity<String> placeBet(
             @RequestParam String username,
             @RequestParam double amount,
             @RequestParam double odds,
